@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe Técnico — API REST v1 | Atlas Forenses</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --primary: #1e3a5f;
+    --primary-light: #2a4a73;
+    --accent: #c9a227;
+    --accent-light: #e0bc3a;
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --text-muted: #5a5a6e;
+    --border: #d1d5db;
+    --success: #166534;
+    --warning: #92400e;
+    --danger: #991b1b;
+    --code-bg: #0f172a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 40px 32px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 300px; height: 300px;
+    background: rgba(201, 162, 39, 0.1);
+    border-radius: 50%;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { font-size: 14px; opacity: 0.85; font-weight: 400; }
+  .header .meta { margin-top: 20px; display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; }
+  .header .meta-item { display: flex; align-items: center; gap: 6px; }
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-gold { background: var(--accent); color: var(--primary); }
+  .badge-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); }
+
+  .nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    background: var(--card);
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 12px;
+    z-index: 10;
+  }
+  .nav-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .nav-btn:hover { background: var(--bg); color: var(--primary); }
+  .nav-btn.active { background: var(--primary); color: white; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #e5e7eb;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+  .card-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid #e5e7eb; }
+  tr:hover td { background: #f9fafb; }
+  tr:last-child td { border-bottom: none; }
+
+  .code-block {
+    background: var(--code-bg);
+    color: #e2e8f0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 12px 0;
+    position: relative;
+  }
+  .code-block .lang-label {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+  .code-block code { color: #e2e8f0; }
+  .code-block .comment { color: #6b7280; }
+  .code-block .string { color: #a5f3fc; }
+  .code-block .key { color: #fca5a5; }
+  .code-block .num { color: #86efac; }
+  .code-block .method { color: #fde047; font-weight: 600; }
+
+  .endpoint {
+    border-left: 4px solid var(--accent);
+    padding-left: 20px;
+    margin: 20px 0;
+  }
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .method-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+  }
+  .method-get { background: #dbeafe; color: #1e40af; }
+  .endpoint-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .endpoint-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
+
+  .alert {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 13px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .alert-icon { flex-shrink: 0; margin-top: 2px; }
+  .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+  .alert-warning { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+  .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .styled-list { list-style: none; padding: 0; }
+  .styled-list li {
+    padding: 10px 0 10px 28px;
+    position: relative;
+    font-size: 14px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .styled-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 16px;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .styled-list li:last-child { border-bottom: none; }
+
+  .footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 12px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 20px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+  @media print {
+    .nav { display: none; }
+    .section { display: block !important; }
+    .card { break-inside: avoid; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div>
+        <h1>Informe Técnico — API REST v1</h1>
+        <p class="subtitle">Sistema Atlas Forenses — Documentación de Integración para Profesor</p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="badge badge-gold">Versión 1.0</span>
+        <span class="badge badge-outline">Solo Lectura</span>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="meta-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+        <span><strong>Base URL:</strong> http://127.0.0.1:8000</span>
+      </div>
+      <div class="meta-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+        <span><strong>Token Demo:</strong> 9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a</span>
+      </div>
+      <div class="meta-item">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span><strong>Usuario:</strong> externo@nexoforense.com (CICPC — Organismo Externo)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('resumen')">Resumen Ejecutivo</button>
+    <button class="nav-btn" onclick="showSection('seguridad')">Arquitectura de Seguridad</button>
+    <button class="nav-btn" onclick="showSection('endpoints')">Endpoints</button>
+    <button class="nav-btn" onclick="showSection('errores')">Códigos de Error</button>
+    <button class="nav-btn" onclick="showSection('postman')">Guía Postman</button>
+  </div>
+
+  <div id="resumen" class="section active">
+    <div class="card">
+      <h2 class="card-title">Resumen Ejecutivo</h2>
+      <p class="card-subtitle">Visión general del sistema de integración API REST para consultas forenses.</p>
+
+      <div class="grid-2">
+        <div>
+          <h3 style="font-size:14px; font-weight:600; color:var(--primary); margin-bottom:10px;">Alcance del Servicio</h3>
+          <ul class="styled-list">
+            <li>Consulta de sedes forenses registradas (morgues)</li>
+            <li>Búsqueda de cadáveres no identificados (fase post-mortem)</li>
+            <li>Consulta de coincidencias algorítmicas ante-mortem vs. post-mortem</li>
+            <li>Acceso de solo lectura para organismos externos</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="font-size:14px; font-weight:600; color:var(--primary); margin-bottom:10px;">Restricciones del Token Demo</h3>
+          <ul class="styled-list">
+            <li>Permiso único: <code style="background:#f3f4f6; padding:2px 6px; border-radius:4px; font-size:12px;">organismo:buscar</code></li>
+            <li>Métodos HTTP permitidos: únicamente <strong>GET</strong></li>
+            <li>No permite crear, modificar ni eliminar registros</li>
+            <li>Rate limit: máximo 60 solicitudes por minuto</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <svg class="alert-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+          <strong>Nota institucional:</strong> Este informe corresponde a la documentación de demostración para el profesor. El token proporcionado es de uso exclusivo para fines académicos y de integración de prueba. Toda consulta queda registrada en el sistema de auditoría.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Especificaciones Técnicas Generales</h2>
+      <table>
+        <tr><th>Parámetro</th><th>Valor</th><th>Observación</th></tr>
+        <tr><td>Protocolo</td><td>HTTP</td><td>Entorno de desarrollo local</td></tr>
+        <tr><td>Puerto</td><td>8000</td><td>Servidor Laravel integrado</td></tr>
+        <tr><td>Formato de respuesta</td><td>JSON</td><td>Header Accept: application/json</td></tr>
+        <tr><td>Autenticación</td><td>Bearer Token</td><td>Laravel Sanctum</td></tr>
+        <tr><td>Versionado</td><td>Prefijo /api/v1/</td><td>Compatible con futuras versiones</td></tr>
+        <tr><td>Paginación</td><td>15 registros/página</td><td>Endpoint buscar-cadaver</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div id="seguridad" class="section">
+    <div class="card">
+      <h2 class="card-title">Arquitectura de Seguridad</h2>
+      <p class="card-subtitle">El sistema implementa cuatro capas de protección para garantizar la integridad y confidencialidad de los datos forenses.</p>
+
+      <table>
+        <tr><th>Capa</th><th>Mecanismo</th><th>Descripción</th></tr>
+        <tr>
+          <td><strong>Autenticación</strong></td>
+          <td>Laravel Sanctum — Bearer Token</td>
+          <td>Verifica la identidad del solicitante mediante token de acceso personal. El token debe enviarse en el header <code>Authorization</code> con prefijo <code>Bearer</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Autorización</strong></td>
+          <td>Middleware <code>api.readonly</code></td>
+          <td>Restringe operaciones a método GET únicamente. Implementa whitelist de direcciones IP autorizadas y verificación de habilidades (abilities) del token.</td>
+        </tr>
+        <tr>
+          <td><strong>Rate Limiting</strong></td>
+          <td><code>throttle:60,1</code></td>
+          <td>Limita a 60 solicitudes por minuto por IP/token. Al exceder el límite, el sistema responde con código HTTP 429.</td>
+        </tr>
+        <tr>
+          <td><strong>Versionado</strong></td>
+          <td>Prefijo <code>/api/v1/</code></td>
+          <td>Aísla cambios futuros de la API, permitiendo evolución sin afectar integraciones existentes.</td>
+        </tr>
+      </table>
+
+      <div class="alert alert-warning">
+        <svg class="alert-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <div>
+          <strong>Advertencia de seguridad:</strong> El token de demostración posee permisos mínimos. En producción, cada organismo externo recibe un token único con alcance restringido a sus jurisdicciones y funciones específicas. La rotación de tokens se realiza cada 90 días.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Flujo de Autenticación</h2>
+      <div class="code-block">
+        <span class="lang-label">Flujo</span>
+        <code>
+<span class="comment"># 1. El cliente envía solicitud con token Bearer</span><br/>
+GET /api/v1/sedes HTTP/1.1<br/>
+Host: 127.0.0.1:8000<br/>
+Authorization: Bearer 9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a<br/>
+Accept: application/json<br/><br/>
+<span class="comment"># 2. Sanctum valida el token y recupera el usuario</span><br/>
+<span class="comment"># 3. El middleware api.readonly verifica:</span><br/>
+<span class="comment">#    - Método HTTP == GET</span><br/>
+<span class="comment">#    - IP en whitelist</span><br/>
+<span class="comment">#    - Habilidad 'organismo:buscar' presente</span><br/>
+<span class="comment"># 4. Si pasa validaciones, se ejecuta el controlador</span><br/>
+<span class="comment"># 5. Rate limiter cuenta la solicitud contra el límite de 60/min</span>
+        </code>
+      </div>
+    </div>
+  </div>
+
+  <div id="endpoints" class="section">
+    <div class="card">
+      <h2 class="card-title">Endpoint 1 — Listar Sedes (Morgues)</h2>
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/api/v1/sedes</span>
+        </div>
+        <p class="endpoint-desc">Retorna el catálogo completo de sedes forenses registradas en el sistema. No requiere parámetros adicionales.</p>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Ejemplo de Solicitud (cURL)</h3>
+      <div class="code-block">
+        <span class="lang-label">bash</span>
+        <code>
+curl -X GET http://127.0.0.1:8000/api/v1/sedes \<br/>
+&nbsp;&nbsp;-H <span class="string">"Authorization: Bearer 9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Accept: application/json"</span>
+        </code>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Respuesta Esperada (200 OK)</h3>
+      <div class="code-block">
+        <span class="lang-label">json</span>
+        <code>
+{<br/>
+&nbsp;&nbsp;<span class="key">"data"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"id"</span>: <span class="num">1</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"nombre"</span>: <span class="string">"Medicatura Forense Caracas"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"estado"</span>: <span class="string">"Distrito Capital"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;]<br/>
+}
+        </code>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Endpoint 2 — Buscar Cadáveres No Identificados (Fase PM)</h2>
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/api/v1/buscar-cadaver</span>
+        </div>
+        <p class="endpoint-desc">Retorna cadáveres con resultado de identificación <code>NEGATIVO</code>. Acepta filtros opcionales por sexo, rango de edad y palabra clave de tatuaje. Respuesta paginada (15 registros por página).</p>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Parámetros de Consulta</h3>
+      <table>
+        <tr><th>Parámetro</th><th>Tipo</th><th>Descripción</th><th>Ejemplo</th></tr>
+        <tr><td><code>sexo</code></td><td>string</td><td>Sexo biológico: <code>M</code> o <code>F</code></td><td><code>sexo=M</code></td></tr>
+        <tr><td><code>edad_min</code></td><td>integer</td><td>Edad mínima aproximada</td><td><code>edad_min=20</code></td></tr>
+        <tr><td><code>edad_max</code></td><td>integer</td><td>Edad máxima aproximada</td><td><code>edad_max=40</code></td></tr>
+        <tr><td><code>tatuaje_keyword</code></td><td>string</td><td>Búsqueda en examen externo (mín. 3 caracteres)</td><td><code>tatuaje_keyword=dragon</code></td></tr>
+      </table>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Ejemplo sin Filtros</h3>
+      <div class="code-block">
+        <span class="lang-label">bash</span>
+        <code>
+curl -X GET <span class="string">"http://127.0.0.1:8000/api/v1/buscar-cadaver"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Authorization: Bearer 9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Accept: application/json"</span>
+        </code>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Ejemplo con Filtros</h3>
+      <div class="code-block">
+        <span class="lang-label">bash</span>
+        <code>
+curl -X GET <span class="string">"http://127.0.0.1:8000/api/v1/buscar-cadaver?sexo=M&edad_min=20&edad_max=40"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Authorization: Bearer 9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Accept: application/json"</span>
+        </code>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Estructura de Respuesta (Paginada)</h3>
+      <div class="code-block">
+        <span class="lang-label">json</span>
+        <code>
+{<br/>
+&nbsp;&nbsp;<span class="key">"data"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"id_interno_forense"</span>: <span class="num">12</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"numero_cadaver"</span>: <span class="string">"C-2025-001"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"numero_expediente"</span>: <span class="string">"EXP-2025-999"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"fase_descomposicion"</span>: <span class="string">"Fresco"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"datos_biologicos"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"sexo"</span>: <span class="string">"M"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"edad_aproximada"</span>: <span class="num">30</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"fecha_ingreso"</span>: <span class="string">"2025-03-15T10:00:00+00:00"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"sede_morgue"</span>: <span class="string">"Medicatura Forense Caracas"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"señas_particulares"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"cabellos"</span>: <span class="string">"Negro lacio corto"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"ojos"</span>: <span class="string">"Marrones"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"dentadura_estado"</span>: <span class="string">"Completa"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"marcas_tatuajes"</span>: <span class="string">"Tatuaje de dragón en brazo izquierdo"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;<span class="key">"links"</span>: { <span class="key">"first"</span>: <span class="string">"..."</span>, <span class="key">"last"</span>: <span class="string">"..."</span>, <span class="key">"next"</span>: <span class="string">"..."</span> },<br/>
+&nbsp;&nbsp;<span class="key">"meta"</span>: { <span class="key">"current_page"</span>: <span class="num">1</span>, <span class="key">"per_page"</span>: <span class="num">15</span>, <span class="key">"total"</span>: <span class="num">42</span> }<br/>
+}
+        </code>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Endpoint 3 — Consultar Coincidencias de Denuncia (Fase AM)</h2>
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/api/v1/denuncias/{nro_denuncia}/coincidencias</span>
+        </div>
+        <p class="endpoint-desc">Dado un número de denuncia ante-mortem, retorna las coincidencias calculadas por el algoritmo forense de emparejamiento. Incluye porcentaje de similitud, puntos clave de concordancia y estado de revisión.</p>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Ejemplo de Solicitud</h3>
+      <div class="code-block">
+        <span class="lang-label">bash</span>
+        <code>
+curl -X GET <span class="string">"http://127.0.0.1:8000/api/v1/denuncias/DEN-2025-001/coincidencias"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Authorization: Bearer 9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a"</span> \<br/>
+&nbsp;&nbsp;-H <span class="string">"Accept: application/json"</span>
+        </code>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Respuesta Exitosa (200 OK)</h3>
+      <div class="code-block">
+        <span class="lang-label">json</span>
+        <code>
+{<br/>
+&nbsp;&nbsp;<span class="key">"data"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"id_coincidencia"</span>: <span class="num">3</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"porcentaje_similitud"</span>: <span class="num">87.5</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"puntos_clave"</span>: <span class="string">"Sexo, edad, tatuaje en brazo izquierdo"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"estatus"</span>: <span class="string">"PENDIENTE"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"fecha_calculo"</span>: <span class="string">"2025-06-01T09:30:00+00:00"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"datos_hallazgo"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"id_interno_forense"</span>: <span class="num">12</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"numero_cadaver"</span>: <span class="string">"C-2025-001"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"..."</span>: <span class="string">"..."</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;]<br/>
+}
+        </code>
+      </div>
+
+      <h3 style="font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 10px;">Respuesta de Error (404 Not Found)</h3>
+      <div class="code-block">
+        <span class="lang-label">json</span>
+        <code>
+{<br/>
+&nbsp;&nbsp;<span class="key">"error"</span>: <span class="string">"No encontrado"</span>,<br/>
+&nbsp;&nbsp;<span class="key">"message"</span>: <span class="string">"El número de denuncia especificado no existe en el sistema forense."</span><br/>
+}
+        </code>
+      </div>
+    </div>
+  </div>
+
+  <div id="errores" class="section">
+    <div class="card">
+      <h2 class="card-title">Códigos de Respuesta HTTP</h2>
+      <p class="card-subtitle">Catálogo de respuestas de error que la API puede retornar, ordenadas por severidad.</p>
+
+      <table>
+        <tr><th>Código</th><th>Significado</th><th>Causa Probable</th><th>Acción Recomendada</th></tr>
+        <tr>
+          <td><span style="color:var(--danger); font-weight:700;">401</span></td>
+          <td><strong>Unauthorized</strong></td>
+          <td>Token inválido, expirado o no enviado en el header <code>Authorization</code>.</td>
+          <td>Verificar que el token esté activo y correctamente formateado con prefijo <code>Bearer</code>.</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--danger); font-weight:700;">403</span></td>
+          <td><strong>Forbidden</strong></td>
+          <td>Dirección IP no autorizada o habilidad insuficiente en el token.</td>
+          <td>Contactar al administrador del sistema para solicitar acceso desde la IP actual o revisar permisos del token.</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--warning); font-weight:700;">404</span></td>
+          <td><strong>Not Found</strong></td>
+          <td>El recurso solicitado no existe (ej. número de denuncia inexistente).</td>
+          <td>Verificar la URL y los parámetros. Confirmar que el identificador sea correcto.</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--warning); font-weight:700;">422</span></td>
+          <td><strong>Unprocessable Entity</strong></td>
+          <td>Error de validación en los parámetros de consulta.</td>
+          <td>Revisar el formato y tipo de datos enviados. Consultar la documentación de parámetros.</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--danger); font-weight:700;">429</span></td>
+          <td><strong>Too Many Requests</strong></td>
+          <td>Rate limit excedido (> 60 solicitudes por minuto).</td>
+          <td>Implementar lógica de reintento con backoff exponencial. Reducir frecuencia de peticiones.</td>
+        </tr>
+      </table>
+
+      <div class="alert alert-danger">
+        <svg class="alert-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+          <strong>Importante:</strong> Todas las respuestas de error incluyen un cuerpo JSON con los campos <code>error</code> y <code>message</code>. Se recomienda registrar estos códigos en los logs de integración para facilitar diagnósticos.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Diagrama de Flujo de Errores</h2>
+      <div style="background:#f8fafc; border-radius:8px; padding:24px; text-align:center; font-size:13px; color:var(--text-muted);">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div style="background:white; border:2px solid var(--primary); padding:10px 20px; border-radius:6px; font-weight:600; color:var(--primary);">Solicitud entrante</div>
+          <div style="font-size:18px; color:var(--border);">↓</div>
+          <div style="background:white; border:2px solid #bfdbfe; padding:10px 20px; border-radius:6px; font-weight:500;">¿Token válido? → <span style="color:var(--danger);">401</span></div>
+          <div style="font-size:18px; color:var(--border);">↓</div>
+          <div style="background:white; border:2px solid #bfdbfe; padding:10px 20px; border-radius:6px; font-weight:500;">¿IP / Habilidad autorizada? → <span style="color:var(--danger);">403</span></div>
+          <div style="font-size:18px; color:var(--border);">↓</div>
+          <div style="background:white; border:2px solid #bfdbfe; padding:10px 20px; border-radius:6px; font-weight:500;">¿Parámetros válidos? → <span style="color:var(--warning);">422</span></div>
+          <div style="font-size:18px; color:var(--border);">↓</div>
+          <div style="background:white; border:2px solid #bfdbfe; padding:10px 20px; border-radius:6px; font-weight:500;">¿Recurso existe? → <span style="color:var(--warning);">404</span></div>
+          <div style="font-size:18px; color:var(--border);">↓</div>
+          <div style="background:white; border:2px solid #bfdbfe; padding:10px 20px; border-radius:6px; font-weight:500;">¿Rate limit excedido? → <span style="color:var(--danger);">429</span></div>
+          <div style="font-size:18px; color:var(--border);">↓</div>
+          <div style="background:#dcfce7; border:2px solid var(--success); padding:10px 20px; border-radius:6px; font-weight:600; color:var(--success);">200 OK — Respuesta exitosa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="postman" class="section">
+    <div class="card">
+      <h2 class="card-title">Guía de Importación en Postman</h2>
+      <p class="card-subtitle">Procedimiento paso a paso para importar la colección de pruebas de la API Atlas Forenses.</p>
+
+      <div style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="background:var(--primary); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">1</div>
+          <div>
+            <strong style="font-size:14px;">Abrir Postman</strong>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Iniciar la aplicación Postman (versión web o de escritorio).</p>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="background:var(--primary); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">2</div>
+          <div>
+            <strong style="font-size:14px;">Importar colección</strong>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Hacer clic en <strong>Import</strong> → seleccionar la pestaña <strong>Raw text</strong>.</p>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="background:var(--primary); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">3</div>
+          <div>
+            <strong style="font-size:14px;">Pegar JSON de la colección</strong>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Copiar el bloque JSON completo que se muestra a continuación y pegarlo en el campo de texto.</p>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div style="background:var(--primary); color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;">4</div>
+          <div>
+            <strong style="font-size:14px;">Confirmar importación</strong>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Postman detectará automáticamente la colección. Hacer clic en <strong>Import</strong> para finalizar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Colección JSON para Importar</h2>
+      <div class="code-block" style="max-height:500px; overflow-y:auto;">
+        <span class="lang-label">json</span>
+        <code>
+{<br/>
+&nbsp;&nbsp;<span class="key">"info"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="string">"Atlas Forenses API v1"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"schema"</span>: <span class="string">"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"</span><br/>
+&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;<span class="key">"variable"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"base_url"</span>, <span class="key">"value"</span>: <span class="string">"http://127.0.0.1:8000"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"token"</span>, <span class="key">"value"</span>: <span class="string">"9|x67VdjgIZRKb7UDzeQZvusp98cZ4H09tJSQPCUYob9f0ae7a"</span> }<br/>
+&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;<span class="key">"item"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="string">"1. Listar Sedes"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"request"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"method"</span>: <span class="string">"GET"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"header"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Authorization"</span>, <span class="key">"value"</span>: <span class="string">"Bearer {{token}}"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Accept"</span>, <span class="key">"value"</span>: <span class="string">"application/json"</span> }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"url"</span>: <span class="string">"{{base_url}}/api/v1/sedes"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="string">"2. Buscar Cadáveres (sin filtros)"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"request"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"method"</span>: <span class="string">"GET"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"header"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Authorization"</span>, <span class="key">"value"</span>: <span class="string">"Bearer {{token}}"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Accept"</span>, <span class="key">"value"</span>: <span class="string">"application/json"</span> }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"url"</span>: <span class="string">"{{base_url}}/api/v1/buscar-cadaver"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="string">"3. Buscar Cadáveres (con filtros)"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"request"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"method"</span>: <span class="string">"GET"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"header"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Authorization"</span>, <span class="key">"value"</span>: <span class="string">"Bearer {{token}}"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Accept"</span>, <span class="key">"value"</span>: <span class="string">"application/json"</span> }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"url"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"raw"</span>: <span class="string">"{{base_url}}/api/v1/buscar-cadaver?sexo=M&edad_min=20&edad_max=45"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"query"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"sexo"</span>, <span class="key">"value"</span>: <span class="string">"M"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"edad_min"</span>, <span class="key">"value"</span>: <span class="string">"20"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"edad_max"</span>, <span class="key">"value"</span>: <span class="string">"45"</span> }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="string">"4. Coincidencias de Denuncia"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"request"</span>: {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"method"</span>: <span class="string">"GET"</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"header"</span>: [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Authorization"</span>, <span class="key">"value"</span>: <span class="string">"Bearer {{token}}"</span> },<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">"key"</span>: <span class="string">"Accept"</span>, <span class="key">"value"</span>: <span class="string">"application/json"</span> }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"url"</span>: <span class="string">"{{base_url}}/api/v1/denuncias/DEN-2025-001/coincidencias"</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;]<br/>
+}
+        </code>
+      </div>
+
+      <div class="alert alert-info">
+        <svg class="alert-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+          <strong>Variables de entorno:</strong> La colección utiliza las variables <code>{{base_url}}</code> y <code>{{token}}</code>. Esto permite cambiar la URL base o rotar el token sin modificar cada solicitud individualmente.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Resumen de Solicitudes Incluidas</h2>
+      <table>
+        <tr><th>#</th><th>Nombre</th><th>Método</th><th>Endpoint</th><th>Descripción</th></tr>
+        <tr><td>1</td><td>Listar Sedes</td><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/sedes</code></td><td>Catálogo de morgues forenses</td></tr>
+        <tr><td>2</td><td>Buscar Cadáveres (sin filtros)</td><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/buscar-cadaver</code></td><td>Todos los no identificados</td></tr>
+        <tr><td>3</td><td>Buscar Cadáveres (con filtros)</td><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/buscar-cadaver?...</code></td><td>Filtrado por sexo y edad</td></tr>
+        <tr><td>4</td><td>Coincidencias de Denuncia</td><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/denuncias/{nro}/coincidencias</code></td><td>Emparejamiento AM vs PM</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><strong>Atlas Forenses — Sistema de Gestión Forense Integral</strong></p>
+    <p>Documento generado para fines académicos y de demostración. Token de solo lectura.</p>
+    <p style="margin-top:8px; opacity:0.6;">© 2025 Nexo Forense. Todos los derechos reservados.</p>
+  </div>
+</div>
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
